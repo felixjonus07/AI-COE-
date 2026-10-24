@@ -1,6 +1,6 @@
 # AI-COE Machine Learning & Deep Learning Projects
 
-This repository contains implementations of foundational Machine Learning algorithms and Deep Learning architectures.
+This repository contains implementations of foundational Machine Learning algorithms and Deep Learning architectures with automated Kaggle dataset integration using `kagglehub`.
 
 ## Directory Structure
 
@@ -24,20 +24,22 @@ AI-COE-/
 
 ## 🤖 Deep Learning Projects (`DL projects/`)
 
-### 1. ANN for Binary Classification (`make_moons`)
+All Deep Learning projects automatically download and cache public datasets from **Kaggle** using `kagglehub`:
+
+### 1. ANN for Binary Classification
 - **Script:** `DL projects/01_ann_binary_classification_make_moons.py`
-- **Dataset:** Scikit-learn synthetic `make_moons` dataset.
-- **Architecture:** Multi-Layer Perceptron (ANN) with 2 hidden layers (ReLU activation) and `BCEWithLogitsLoss`.
+- **Kaggle Dataset:** [`fedesoriano/heart-failure-prediction`](https://www.kaggle.com/datasets/fedesoriano/heart-failure-prediction)
+- **Architecture:** Multi-Layer Perceptron (ANN) with input standardization, ReLU activations, dropout, and `BCEWithLogitsLoss`.
 
 ### 2. CNN for Dog–Cat Image Classification
 - **Script:** `DL projects/02_cnn_dog_cat_classification.py`
-- **Architecture:** 3 Convolutional Layers (Conv2D + BatchNorm + ReLU + MaxPool), followed by Adaptive Average Pooling, Dropout, and Fully Connected classifier.
-- **Data Pipeline:** Compatible with PyTorch `ImageFolder` with sample generation for quick local testing.
+- **Kaggle Dataset:** [`chetankv/dogs-cats-images`](https://www.kaggle.com/datasets/chetankv/dogs-cats-images)
+- **Architecture:** Exactly 3 Convolutional Layers (Conv2D + BatchNorm + ReLU + MaxPool), followed by Adaptive Average Pooling, Dropout, and Fully Connected classifier with PyTorch `ImageFolder`.
 
 ### 3. Transformer-Based Next-Token Prediction
 - **Script:** `DL projects/03_transformer_next_token_prediction.py`
-- **Architecture:** Basic Causal Scaled Dot-Product Self-Attention implemented from first principles, causal triangular masking, Transformer Decoder Blocks with LayerNorm and Feed-Forward Networks (FFN).
-- **Task:** Autoregressive language modeling and greedy token sequence generation.
+- **Kaggle Dataset:** [`therohk/million-headlines`](https://www.kaggle.com/datasets/therohk/million-headlines)
+- **Architecture:** Basic Causal Scaled Dot-Product Self-Attention implemented from first principles, causal triangular masking, Transformer Decoder Blocks with LayerNorm and Feed-Forward Networks (FFN), and autoregressive next-token text generation.
 
 ---
 
@@ -68,7 +70,7 @@ AI-COE-/
 ## How to Run
 
 ```bash
-# Deep Learning Projects
+# Deep Learning Projects (Downloads Kaggle datasets automatically)
 python "DL projects/01_ann_binary_classification_make_moons.py"
 python "DL projects/02_cnn_dog_cat_classification.py"
 python "DL projects/03_transformer_next_token_prediction.py"

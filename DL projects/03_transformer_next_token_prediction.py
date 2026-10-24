@@ -1,9 +1,14 @@
 """
 Task 3: Transformer-Based Next-Token Prediction Model Using Basic Self-Attention
+Dataset: Kaggle Million Headlines Dataset (therohk/million-headlines)
 Framework: PyTorch
 """
 
+import os
+import glob
 import math
+import kagglehub
+import pandas as pd
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -22,7 +27,7 @@ class BasicSelfAttention(nn.Module):
 
         # Linear projections for Query (Q), Key (K), and Value (V)
         self.query_proj = nn.Linear(d_model, d_model)
-        self.key_proj = nn.Linear(d_model, d_model)
+        self.key_proj   = nn.Linear(d_model, d_model)
         self.value_proj = nn.Linear(d_model, d_model)
 
         # Output projection
@@ -38,21 +43,19 @@ class BasicSelfAttention(nn.Module):
         V = self.value_proj(x)  # (B, T, d_model)
 
         # 2. Scaled Dot-Product: (Q @ K^T) / sqrt(d_k)
-        # Result shape: (batch_size, seq_len, seq_len)
         scores = torch.bmm(Q, K.transpose(1, 2)) / math.sqrt(self.d_model)
 
-        # 3. Causal Mask: Prevent future tokens from being visible (autoregressive property)
-        # Upper triangular entries above diagonal become -infinity
+        # 3. Causal Mask: Prevent future tokens from being visible (autoregressive)
         causal_mask = torch.triu(torch.ones(seq_len, seq_len, device=x.device), diagonal=1).bool()
         scores = scores.masked_fill(causal_mask, float("-inf"))
 
-        # 4. Softmax to obtain attention weights (probabilities)
+        # 4. Softmax to obtain attention weights
         attention_weights = torch.softmax(scores, dim=-1)
 
         # 5. Weighted sum with Value vectors
-        context = torch.bmm(attention_weights, V)  # (B, T, d_model)
+        context = torch.bmm(attention_weights, V)
 
-        # 6. Final linear transformation
+        # 6. Final linear projection
         return self.out_proj(context)
 
 
@@ -61,9 +64,9 @@ class BasicSelfAttention(nn.Module):
 # -------------------------------------------------------------
 class TransformerBlock(nn.Module):
     """
-    Standard Transformer Decoder Layer consisting of:
+    Standard Transformer Decoder Layer:
     - Pre-LayerNorm + Self-Attention + Residual Connection
-    - Pre-LayerNorm + Feed-Forward Network + Residual Connection
+    - Pre-LayerNorm + Feed-Forward Network (FFN) + Residual Connection
     """
     def __init__(self, d_model, hidden_dim):
         super().__init__()
@@ -71,7 +74,6 @@ class TransformerBlock(nn.Module):
         self.norm1 = nn.LayerNorm(d_model)
         self.norm2 = nn.LayerNorm(d_model)
 
-        # Position-wise Feed-Forward Network (FFN)
         self.ffn = nn.Sequential(
             nn.Linear(d_model, hidden_dim),
             nn.GELU(),
@@ -79,9 +81,7 @@ class TransformerBlock(nn.Module):
         )
 
     def forward(self, x):
-        # Residual connection around self-attention
         x = x + self.attn(self.norm1(x))
-        # Residual connection around feed-forward network
         x = x + self.ffn(self.norm2(x))
         return x
 
@@ -90,7 +90,7 @@ class TransformerBlock(nn.Module):
 # 3. Next-Token Prediction Language Model
 # -------------------------------------------------------------
 class TransformerNextTokenLM(nn.Module):
-    def __init__(self, vocab_size, max_seq_len=64, d_model=64, num_layers=2):
+    def __init__(self, vocab_size, max_seq_len=32, d_model=64, num_layers=2):
         super().__init__()
         self.max_seq_len = max_seq_len
         self.d_model = d_model
@@ -106,100 +106,89 @@ class TransformerNextTokenLM(nn.Module):
         ])
 
         self.final_norm = nn.LayerNorm(d_model)
-        # Head to map back to vocabulary logits
         self.lm_head = nn.Linear(d_model, vocab_size)
 
     def forward(self, input_ids):
-        # input_ids shape: (batch_size, seq_len)
         batch_size, seq_len = input_ids.shape
-
-        # Positional indices: [0, 1, 2, ..., seq_len-1]
         positions = torch.arange(0, seq_len, device=input_ids.device).unsqueeze(0)
 
-        # Sum token embeddings and positional embeddings
         x = self.token_embedding(input_ids) + self.position_embedding(positions)
-
-        # Pass through transformer blocks
         for block in self.blocks:
             x = block(x)
 
         x = self.final_norm(x)
-        logits = self.lm_head(x)  # Shape: (batch_size, seq_len, vocab_size)
+        logits = self.lm_head(x)  # (batch_size, seq_len, vocab_size)
         return logits
 
     @torch.no_grad()
-    def generate(self, prompt_ids, max_new_tokens=10):
-        """
-        Autoregressive next-token generation (greedy decoding).
-        """
+    def generate(self, prompt_ids, max_new_tokens=8):
         self.eval()
         generated = prompt_ids.clone()
 
         for _ in range(max_new_tokens):
-            # Crop to maximum supported sequence length
             context = generated[:, -self.max_seq_len:]
             logits = self.forward(context)
-
-            # Focus only on the prediction for the last position
             next_token_logits = logits[:, -1, :]
             next_token_id = torch.argmax(next_token_logits, dim=-1, keepdim=True)
-
-            # Append predicted token to sequence
             generated = torch.cat((generated, next_token_id), dim=1)
 
         return generated
 
 
 # -------------------------------------------------------------
-# 4. Tokenizer & Dataset Preparation
+# 4. Load Kaggle Text Dataset & Tokenization
 # -------------------------------------------------------------
-corpus = (
-    "artificial intelligence and neural networks are transforming technology . "
-    "deep learning models learn patterns from data . "
-    "language models predict the next token in a sequence . "
-    "transformers use self attention to model relationships between words ."
-)
+def load_kaggle_corpus(num_headlines=150):
+    print("=" * 65)
+    print("Task 3: Transformer Next-Token Prediction (Kaggle Dataset)")
+    print("=" * 65)
+    print("Downloading/fetching Kaggle Million Headlines dataset...")
+    path = kagglehub.dataset_download("therohk/million-headlines")
+    csv_file = glob.glob(os.path.join(path, "*.csv"))[0]
 
-# Simple word-level tokenizer
-tokens = corpus.split()
-vocab = sorted(list(set(tokens)))
-word2id = {w: i for i, w in enumerate(vocab)}
-id2word = {i: w for i, w in enumerate(vocab)}
-vocab_size = len(vocab)
+    df = pd.read_csv(csv_file, nrows=num_headlines)
+    headlines = df["headline_text"].dropna().str.lower().tolist()
 
-# Convert whole corpus to token IDs
-token_ids = [word2id[w] for w in tokens]
-
-# Create next-token prediction training pairs:
-# Input sequence (x) and Target sequence shifted by 1 token (y)
-seq_length = 8
-inputs, targets = [], []
-for i in range(len(token_ids) - seq_length):
-    inputs.append(token_ids[i : i + seq_length])
-    targets.append(token_ids[i + 1 : i + seq_length + 1])
-
-X = torch.tensor(inputs, dtype=torch.long)
-Y = torch.tensor(targets, dtype=torch.long)
+    # Join headlines with period delimiters
+    corpus = " . ".join(headlines) + " ."
+    print(f"Loaded {len(headlines)} headlines from Kaggle: {os.path.basename(csv_file)}")
+    return corpus
 
 
 # -------------------------------------------------------------
-# 5. Model Training & Generation Demo
+# 5. Training & Generation Routine
 # -------------------------------------------------------------
-def run_transformer():
-    print("=" * 60)
-    print("Task 3: Transformer-Based Next-Token Prediction Model")
-    print("=" * 60)
-    print(f"Vocabulary Size: {vocab_size} unique words")
-    print(f"Corpus token count: {len(token_ids)} | Training samples: {len(X)}")
-    print("-" * 60)
+def train_and_generate():
+    corpus = load_kaggle_corpus(num_headlines=100)
+
+    # Simple word-level tokenizer
+    tokens = corpus.split()
+    vocab = sorted(list(set(tokens)))
+    word2id = {w: i for i, w in enumerate(vocab)}
+    id2word = {i: w for i, w in enumerate(vocab)}
+    vocab_size = len(vocab)
+
+    print(f"Vocabulary Size: {vocab_size} unique words | Total Tokens: {len(tokens)}")
+
+    # Convert corpus to sequence pairs (input -> target shifted by 1)
+    token_ids = [word2id[w] for w in tokens]
+    seq_length = 8
+    inputs, targets = [], []
+    for i in range(len(token_ids) - seq_length):
+        inputs.append(token_ids[i : i + seq_length])
+        targets.append(token_ids[i + 1 : i + seq_length + 1])
+
+    X = torch.tensor(inputs, dtype=torch.long)
+    Y = torch.tensor(targets, dtype=torch.long)
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model = TransformerNextTokenLM(
         vocab_size=vocab_size, max_seq_len=32, d_model=64, num_layers=2
     ).to(device)
 
+    print("-" * 65)
     print(model)
-    print("-" * 60)
+    print("-" * 65)
 
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.AdamW(model.parameters(), lr=0.003)
@@ -208,46 +197,42 @@ def run_transformer():
     Y_dev = Y.to(device)
 
     # Training loop
-    epochs = 120
+    epochs = 80
     for epoch in range(1, epochs + 1):
         model.train()
         optimizer.zero_grad()
 
-        # Forward pass: shape (B, T, vocab_size)
         logits = model(X_dev)
-
-        # Reshape to (B*T, vocab_size) and (B*T) for cross-entropy
         loss = criterion(logits.view(-1, vocab_size), Y_dev.view(-1))
-
-        # Backward pass & update
         loss.backward()
         optimizer.step()
 
         if epoch % 20 == 0 or epoch == 1:
-            print(f"Epoch [{epoch:3d}/{epochs}] - Loss: {loss.item():.4f}")
+            print(f"Epoch [{epoch:2d}/{epochs}] - Loss: {loss.item():.4f}")
 
-    # ---------------------------------------------------------
-    # 6. Autoregressive Text Generation Test
-    # ---------------------------------------------------------
-    print("-" * 60)
-    test_prompts = [
-        ["language", "models"],
-        ["transformers", "use"],
-        ["deep", "learning"]
+    # Autoregressive Generation Demonstration
+    print("-" * 65)
+    print("Kaggle Headline Next-Token Autoregressive Generation:")
+    sample_prompts = [
+        ["police"],
+        ["council"],
+        ["new"],
+        ["fire"]
     ]
 
-    print("Next-Token Generation Demo:")
-    for prompt_words in test_prompts:
-        prompt_ids = torch.tensor([[word2id[w] for w in prompt_words]], device=device)
+    for p in sample_prompts:
+        # Verify prompt word exists in vocab
+        valid_words = [w for w in p if w in word2id]
+        if not valid_words:
+            continue
+        prompt_ids = torch.tensor([[word2id[w] for w in valid_words]], device=device)
         output_ids = model.generate(prompt_ids, max_new_tokens=6)
-        output_tokens = [id2word[idx.item()] for idx in output_ids[0]]
-        prompt_text = " ".join(prompt_words)
-        generated_text = " ".join(output_tokens)
-        print(f"  Prompt   : \"{prompt_text}\"")
-        print(f"  Generated: \"{generated_text}\"")
+        output_words = [id2word[idx.item()] for idx in output_ids[0]]
+        print(f"  Prompt   : \"{' '.join(valid_words)}\"")
+        print(f"  Generated: \"{' '.join(output_words)}\"")
         print()
-    print("=" * 60)
+    print("=" * 65)
 
 
 if __name__ == "__main__":
-    run_transformer()
+    train_and_generate()
