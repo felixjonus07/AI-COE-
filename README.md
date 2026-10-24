@@ -12,12 +12,17 @@ AI-COE-/
 │   ├── 01_ann_binary_classification_make_moons.py
 │   ├── 02_cnn_dog_cat_classification.py
 │   └── 03_transformer_next_token_prediction.py
-└── ML projects/
-    ├── 01_gradient_descent_linear_regression.py
-    ├── 02_gradient_descent_mse_linear_regression.py
-    ├── 03_sklearn_linear_regression_housing.py
-    ├── 04_linear_regression_titanic_classification.py
-    └── 05_linear_regression_spam_classification.py
+├── ML projects/
+│   ├── 01_gradient_descent_linear_regression.py
+│   ├── 02_gradient_descent_mse_linear_regression.py
+│   ├── 03_sklearn_linear_regression_housing.py
+│   ├── 04_linear_regression_titanic_classification.py
+│   └── 05_linear_regression_spam_classification.py
+└── business_entity_resolution/
+    ├── main.py
+    ├── models/
+    ├── src/
+    └── requirements.txt
 ```
 
 ---
