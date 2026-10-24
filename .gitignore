@@ -1,0 +1,46 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+venv/
+.venv/
+env/
+ENV/
+
+# Datasets and Image Data
+dog_cat_demo_data/
+data/
+dataset/
+datasets/
+data_*/
+*.jpg
+*.jpeg
+*.png
+*.bmp
+*.gif
+*.csv
+*.tsv
+*.parquet
+*.h5
+*.hdf5
+*.npy
+*.npz
+
+# PyTorch / ML Model weights and checkpoints
+*.pt
+*.pth
+*.bin
+*.onnx
+*.safetensors
+*.ckpt
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+
+# IDE & OS specific files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
