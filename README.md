@@ -9,9 +9,15 @@ AI-COE-/
 ├── .gitignore
 ├── README.md
 ├── DL projects/
-│   ├── 01_ann_binary_classification_make_moons.py
-│   ├── 02_cnn_dog_cat_classification.py
-│   └── 03_transformer_next_token_prediction.py
+│   ├── 01_ann_binary_classification/
+│   │   ├── README.md
+│   │   └── main.py
+│   ├── 02_cnn_dog_cat_classification/
+│   │   ├── README.md
+│   │   └── main.py
+│   └── 03_transformer_next_token_prediction/
+│       ├── README.md
+│       └── main.py
 ├── ML projects/
 │   ├── 01_gradient_descent_linear_regression.py
 │   ├── 02_gradient_descent_mse_linear_regression.py
@@ -29,20 +35,23 @@ AI-COE-/
 
 ## 🤖 Deep Learning Projects (`DL projects/`)
 
-All Deep Learning projects automatically download and cache public datasets from **Kaggle** using `kagglehub`:
+All Deep Learning projects are modularized into self-contained directories with their own dedicated `README.md` and automatically download/cache public datasets from **Kaggle** using `kagglehub`:
 
 ### 1. ANN for Binary Classification
-- **Script:** `DL projects/01_ann_binary_classification_make_moons.py`
+- **Directory:** [`DL projects/01_ann_binary_classification/`](DL%20projects/01_ann_binary_classification/)
+- **Script:** `DL projects/01_ann_binary_classification/main.py`
 - **Kaggle Dataset:** [`fedesoriano/heart-failure-prediction`](https://www.kaggle.com/datasets/fedesoriano/heart-failure-prediction)
 - **Architecture:** Multi-Layer Perceptron (ANN) with input standardization, ReLU activations, dropout, and `BCEWithLogitsLoss`.
 
 ### 2. CNN for Dog–Cat Image Classification
-- **Script:** `DL projects/02_cnn_dog_cat_classification.py`
+- **Directory:** [`DL projects/02_cnn_dog_cat_classification/`](DL%20projects/02_cnn_dog_cat_classification/)
+- **Script:** `DL projects/02_cnn_dog_cat_classification/main.py`
 - **Kaggle Dataset:** [`chetankv/dogs-cats-images`](https://www.kaggle.com/datasets/chetankv/dogs-cats-images)
 - **Architecture:** Exactly 3 Convolutional Layers (Conv2D + BatchNorm + ReLU + MaxPool), followed by Adaptive Average Pooling, Dropout, and Fully Connected classifier with PyTorch `ImageFolder`.
 
 ### 3. Transformer-Based Next-Token Prediction
-- **Script:** `DL projects/03_transformer_next_token_prediction.py`
+- **Directory:** [`DL projects/03_transformer_next_token_prediction/`](DL%20projects/03_transformer_next_token_prediction/)
+- **Script:** `DL projects/03_transformer_next_token_prediction/main.py`
 - **Kaggle Dataset:** [`therohk/million-headlines`](https://www.kaggle.com/datasets/therohk/million-headlines)
 - **Architecture:** Basic Causal Scaled Dot-Product Self-Attention implemented from first principles, causal triangular masking, Transformer Decoder Blocks with LayerNorm and Feed-Forward Networks (FFN), and autoregressive next-token text generation.
 
@@ -76,9 +85,9 @@ All Deep Learning projects automatically download and cache public datasets from
 
 ```bash
 # Deep Learning Projects (Downloads Kaggle datasets automatically)
-python "DL projects/01_ann_binary_classification_make_moons.py"
-python "DL projects/02_cnn_dog_cat_classification.py"
-python "DL projects/03_transformer_next_token_prediction.py"
+python "DL projects/01_ann_binary_classification/main.py"
+python "DL projects/02_cnn_dog_cat_classification/main.py"
+python "DL projects/03_transformer_next_token_prediction/main.py"
 
 # Machine Learning Projects
 python "ML projects/01_gradient_descent_linear_regression.py"
